@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naturgy Comms Challenge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;background:#F4F2EC;color:#1A1A2E;min-height:100vh}
+.header{background:#00205B;padding:14px 32px;display:flex;align-items:center;justify-content:flex-end}
+.badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:12px;color:rgba(255,255,255,.85);font-weight:500;letter-spacing:.04em}
+.screen{display:none}
+.screen.active{display:block}
+
+.intro-grid{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 52px)}
+.intro-left{background:#00205B;padding:64px 52px;display:flex;flex-direction:column;justify-content:center}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#FF6600;margin-bottom:18px}
+.intro-title{font-size:42px;font-weight:300;line-height:1.15;color:#fff;margin-bottom:18px}
+.intro-title em{font-style:italic;color:#FF8533}
+.intro-desc{font-size:16px;line-height:1.7;color:rgba(255,255,255,.65);margin-bottom:36px}
+.stats-row{display:flex;gap:28px;margin-bottom:40px}
+.stat-n{font-size:28px;font-weight:300;color:#fff;line-height:1}
+.stat-l{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}
+.btn-start{display:inline-flex;align-items:center;gap:10px;background:#FF6600;color:#fff;border:none;border-radius:5px;padding:14px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn-start:hover{background:#FF8533}
+.intro-right{background:#F4F2EC;padding:64px 44px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.intro-h3{font-size:17px;font-weight:600;color:#00205B;margin-bottom:6px}
+.pillar-card{background:#fff;border:1px solid rgba(0,32,91,.1);border-radius:10px;padding:18px 20px}
+.pillar-name{font-size:14px;font-weight:600;color:#00205B;margin-bottom:4px}
+.pillar-desc{font-size:13px;color:#4A4A6A;line-height:1.5}
+
+.game-wrap{max-width:720px;margin:0 auto;padding:40px 24px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:16px}
+.prog-info{flex:1}
+.prog-nums{display:flex;justify-content:space-between;font-size:13px;color:#4A4A6A;margin-bottom:8px}
+.prog-track{height:3px;background:rgba(0,32,91,.1);border-radius:2px}
+.prog-fill{height:3px;background:#FF6600;border-radius:2px;transition:width .4s}
+.score-pill{background:#00205B;color:#fff;border-radius:40px;padding:7px 18px;font-size:14px;font-weight:600;white-space:nowrap}
+.score-pts{color:#FF6600}
+.cat-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:4px;margin-bottom:14px}
+.q-card{background:#fff;border:1px solid rgba(0,32,91,.1);border-radius:12px;padding:28px;margin-bottom:14px;border-top:3px solid #FF6600}
+.q-type{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8888AA;margin-bottom:10px}
+.q-text{font-size:19px;font-weight:400;line-height:1.5;color:#00205B}
+.q-ctx{margin-top:16px;border-left:3px solid #00205B;padding:10px 14px;background:rgba(0,32,91,.04);font-size:13px;color:#4A4A6A;line-height:1.6}
+.q-ctx-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#003087;margin-bottom:3px}
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.opt{background:#fff;border:1px solid rgba(0,32,91,.15);border-radius:8px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;text-align:left;width:100%;font-family:inherit;font-size:14px;transition:background .1s,border-color .1s}
+.opt:hover:not([disabled]){background:#f0eee8;border-color:rgba(0,32,91,.3)}
+.opt.correct{background:#E8F5E9;border-color:#2E7D32}
+.opt.wrong{background:#FFEBEE;border-color:#C62828}
+.opt.reveal{background:#E8EEF8;border-color:#00205B}
+.opt-letter{min-width:26px;height:26px;border-radius:50%;background:#F0EEE8;border:1px solid rgba(0,32,91,.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#4A4A6A;flex-shrink:0;transition:background .1s}
+.opt.correct .opt-letter{background:#2E7D32;color:#fff;border-color:#2E7D32}
+.opt.wrong .opt-letter{background:#C62828;color:#fff;border-color:#C62828}
+.opt.reveal .opt-letter{background:#00205B;color:#fff;border-color:#00205B}
+.opt-text{line-height:1.5;color:#1A1A2E;padding-top:2px}
+.opt.correct .opt-text{color:#1B5E20;font-weight:500}
+.opt.wrong .opt-text{color:#B71C1C}
+.opt[disabled]{cursor:default}
+.feedback{display:none;border-radius:8px;padding:14px 16px;margin-bottom:14px;font-size:14px;line-height:1.65}
+.feedback.show{display:block}
+.feedback.ok{background:#E8F5E9;border:1px solid #2E7D32;color:#1B5E20}
+.feedback.ko{background:#FFEBEE;border:1px solid #C62828;color:#B71C1C}
+.fb-title{font-weight:700;font-size:13px;margin-bottom:4px}
+.btn-next{display:none;background:#00205B;color:#fff;border:none;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;float:right;transition:background .15s}
+.btn-next.show{display:block}
+.btn-next:hover{background:#003087}
+.clearfix::after{content:'';display:table;clear:both}
+
+.results-wrap{max-width:680px;margin:0 auto;padding:48px 24px}
+.results-hero{background:#00205B;border-radius:12px;padding:40px;margin-bottom:24px;display:flex;gap:28px;align-items:center}
+.score-ring{width:100px;height:100px;border-radius:50%;border:3px solid #FF6600;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.score-big{font-size:38px;font-weight:300;color:#fff;line-height:1}
+.score-of{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.res-title{font-size:22px;font-weight:400;color:#fff;margin-bottom:8px;line-height:1.3}
+.res-msg{font-size:14px;color:rgba(255,255,255,.65);line-height:1.7}
+.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.ps-card{background:#fff;border:1px solid rgba(0,32,91,.1);border-radius:10px;padding:16px}
+.ps-name{font-size:12px;font-weight:500;color:#4A4A6A;margin-bottom:4px}
+.ps-score{font-size:24px;font-weight:300;color:#00205B;margin-bottom:10px}
+.ps-sub{font-size:13px;color:#8888AA}
+.ps-track{height:4px;background:rgba(0,32,91,.08);border-radius:2px}
+.ps-fill{height:4px;border-radius:2px}
+.actions{display:flex;gap:10px}
+.btn-primary{flex:1;background:#FF6600;color:#fff;border:none;border-radius:6px;padding:13px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#FF8533}
+.btn-secondary{flex:1;background:transparent;color:#00205B;border:1px solid rgba(0,32,91,.2);border-radius:6px;padding:13px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn-secondary:hover{background:rgba(0,32,91,.05)}
+
+@media(max-width:700px){
+  .intro-grid{grid-template-columns:1fr}
+  .intro-left{padding:48px 28px}
+  .intro-right{padding:36px 28px}
+  .pillars-grid{grid-template-columns:1fr}
+  .results-hero{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="badge">Comunicacion interna &middot; Offsite 2025</div>
+</header>
+
+<div id="s-intro" class="screen active">
+  <div class="intro-grid">
+    <div class="intro-left">
+      <div class="eyebrow">Reto de equipo</div>
+      <h1 class="intro-title">Como comunicamos<br><em>de verdad</em></h1>
+      <p class="intro-desc">Situaciones reales del dia a dia en Naturgy. Sin respuestas obvias. Con criterio, una sola voz y mucho carino.</p>
+      <div class="stats-row">
+        <div><div class="stat-n">10</div><div class="stat-l">Situaciones</div></div>
+        <div><div class="stat-n">3</div><div class="stat-l">Pilares</div></div>
+        <div><div class="stat-n">~</div><div class="stat-l">Debate</div></div>
+      </div>
+      <button class="btn-start" id="btnStart">Empezar el reto &#8594;</button>
+    </div>
+    <div class="intro-right">
+      <div class="intro-h3">Los tres pilares del juego</div>
+      <div class="pillar-card">
+        <div class="pillar-name">Criterio editorial</div>
+        <div class="pillar-desc">Que comunico y que no. Que entra en NaturgyNews, en que orden y cuando. Las decisiones dificiles del dia a dia.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-name">Una sola voz</div>
+        <div class="pillar-desc">Que Nedgia, UFD y Renovables escuchen lo mismo, al mismo tiempo, con el mismo tono.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-name">Comunicar con carino</div>
+        <div class="pillar-desc">Lo que publicamos en NaturgyNews afecta a personas reales. El tono y la empatia no son detalle: son el mensaje.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="s-game" class="screen">
+  <div class="game-wrap">
+    <div class="top-bar">
+      <div class="prog-info">
+        <div class="prog-nums"><span id="qLabel">Pregunta 1 de 10</span><span id="qPct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+      <div class="score-pill"><span class="score-pts" id="scoreLive">0</span> pts</div>
+    </div>
+    <div id="catTag"></div>
+    <div class="q-card">
+      <div class="q-type" id="qType"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-ctx" id="qCtx" style="display:none">
+        <div class="q-ctx-lbl">Contexto</div>
+        <span id="qCtxText"></span>
+      </div>
+    </div>
+    <div class="opts" id="optsGrid"></div>
+    <div class="feedback" id="feedback">
+      <div class="fb-title" id="fbTitle"></div>
+      <span id="fbText"></span>
+    </div>
+    <div class="clearfix">
+      <button class="btn-next" id="btnNext">Siguiente &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<div id="s-results" class="screen">
+  <div class="results-wrap">
+    <div class="results-hero">
+      <div class="score-ring">
+        <div class="score-big" id="finalScore">0</div>
+        <div class="score-of" id="finalOf">de 10</div>
+      </div>
+      <div>
+        <div class="res-title" id="resTitle"></div>
+        <div class="res-msg" id="resMsg"></div>
+      </div>
+    </div>
+    <div class="pillars-grid" id="pillarsGrid"></div>
+    <div class="actions">
+      <button class="btn-primary" id="btnReplay">Jugar otra vez</button>
+      <button class="btn-secondary" id="btnIntro">Volver al inicio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var QS = [
+  {
+    cat: "Criterio editorial", catCls: "criterio", type: "Situacion real",
+    text: "El Director General de Personas ha confirmado una reestructuracion que afecta a Nedgia, UFD y Renovables. No hay comunicacion oficial todavia. Un empleado influyente te para: 'Cuentame que hay de verdad, yo no lo voy a difundir.'",
+    ctx: "El anuncio oficial es manana con todos los afectados reunidos. Los rumores ya corren por WhatsApp.",
+    opts: ["Le confirmas lo que sabes, es de confianza y asi para el rumor", "Le dices que hay algo en proceso y que manana lo sabran todos a la vez", "Le niegas todo para que no se extienda nada antes de tiempo", "Le rediriges a su manager sin decirle nada mas"],
+    ans: 1,
+    ok: "Exacto. La equidad en la informacion es clave: si se lo cuentas a el, se lo debes a todos. 'Manana lo sabran todos a la vez' gestiona la expectativa sin crear privilegios informativos.",
+    ko: "La trampa es que parece inocente contarselo a alguien de confianza. Pero eso crea privilegios informativos. La respuesta correcta no es negar ni confirmar: es que manana lo sabran todos a la vez."
+  },
+  {
+    cat: "Una sola voz", catCls: "voz", type: "Dilema de coordinacion",
+    text: "Nedgia, UFD y Renovables han preparado cada una su propio comunicado sobre la misma iniciativa de sostenibilidad para NaturgyNews. Las cifras coinciden pero el tono varia bastante. Las tres quieren publicar hoy.",
+    ctx: "Cada responsable lleva semanas con su version y esta muy orgulloso del trabajo. Rechazar alguna puede generar friccion.",
+    opts: ["Publicar los tres: asi cada negocio se siente representado", "Publicar el mejor sin decir nada a los otros dos", "Retrasar hasta coordinar un unico comunicado conjunto", "Publicarlos en momentos distintos para que no coincidan"],
+    ans: 2,
+    ok: "Correcto. Una sola voz no silencia a nadie: orquesta. Mas trabajo a corto plazo, pero evita la confusion y da mas impacto al mensaje en NaturgyNews.",
+    ko: "Publicar tres versiones del mismo mensaje genera ruido y desconfianza. La B parece eficiente pero es deslealtad encubierta. Solo coordinar resuelve el problema de verdad."
+  },
+  {
+    cat: "Con carino", catCls: "carino", type: "Situacion real",
+    text: "El equipo de Personas lanza un nuevo programa de bienestar para empleados. Os piden publicarlo en NaturgyNews antes de haber informado a los managers de linea.",
+    ctx: "Los managers se enterarian al mismo tiempo que sus equipos. Algunos llevan semanas preguntando por iniciativas de bienestar.",
+    opts: ["Publicarlo ya: la noticia es buena y cuanto antes mejor", "Retrasar la publicacion hasta que los managers hayan sido informados primero", "Publicarlo solo en canales digitales secundarios, no en NaturgyNews todavia", "Pedir al equipo de Personas que lo comunique por su cuenta sin implicar a comunicacion"],
+    ans: 1,
+    ok: "Exacto. Los managers necesitan saber antes que sus equipos para poder responder preguntas y liderar el mensaje. Publicar sin ese paso, aunque la noticia sea buena, genera confusion y resta credibilidad.",
+    ko: "Una buena noticia mal secuenciada genera fricciones innecesarias. Los managers son el primer canal de comunicacion: si se enteran al mismo tiempo que sus equipos, pierden autoridad y confianza."
+  },
+  {
+    cat: "Criterio editorial", catCls: "criterio", type: "Dilema interno",
+    text: "Tu director te pide feedback honesto sobre un comunicado que el mismo ha redactado para NaturgyNews. Es funcional pero bastante plano, y hay un dato que puede interpretarse de forma ambigua.",
+    ctx: "Tienes 10 minutos antes de que salga. Tu director esta bajo mucha presion esta semana.",
+    opts: ["Le dices que esta muy bien para no anadir mas estres, total es funcional", "Le señalas solo el dato ambiguo, sin mencionar el tono para no complicar", "Le das feedback directo sobre los dos puntos con propuesta concreta de mejora", "Lo corriges tu directamente sin decirle nada para ahorrar tiempo"],
+    ans: 2,
+    ok: "Correcto. Dar feedback honesto con propuesta concreta es un acto de respeto profesional. Un equipo que no se da feedback entre si no puede exigirlo al resto de la organizacion.",
+    ko: "A y B parecen amables pero la amabilidad que evita la verdad no es carino: es comodidad. La D rompe la confianza. Solo el feedback directo con propuesta suma de verdad."
+  },
+  {
+    cat: "Una sola voz", catCls: "voz", type: "Situacion real",
+    text: "Un responsable de UFD envia un Teams a toda su area sobre un nuevo beneficio para empleados, 48h antes de que comunicacion interna haya publicado la pieza oficial en NaturgyNews.",
+    ctx: "La informacion es correcta pero incompleta: falta el FAQ, el video explicativo y el canal de dudas que aun no esta activo.",
+    opts: ["Nada, si la informacion es correcta no hay problema real", "Publicar urgentemente la pieza en NaturgyNews sin mencionar lo que paso", "Hablar con el responsable para explicarle el impacto sin dramatizar, y acordar como completar la informacion", "Informar al Director General de Personas para que llame la atencion formalmente"],
+    ans: 2,
+    ok: "Perfecto. La conversacion franca y sin dramatismo es siempre la primera respuesta. Los tiempos y canales no son burocracia: aseguran que nadie recibe informacion a medias.",
+    ko: "La A ignora que la gente recibio informacion incompleta sin canal de dudas activo. La D escala innecesariamente. Conversacion constructiva con el responsable y completar el mensaje."
+  },
+  {
+    cat: "Con carino", catCls: "carino", type: "Dilema de tono",
+    text: "El proceso de evaluacion anual se retrasa dos meses por cambios en el sistema del equipo de Personas. Muchas personas llevaban semanas preparandose. No hay fecha alternativa confirmada.",
+    ctx: "Es la tercera vez en cuatro anos que se retrasa. El ano pasado hubo quejas importantes por falta de transparencia.",
+    opts: ["Comunicar el retraso con fecha provisional aunque no este confirmada, para dar sensacion de control", "Esperar a tener todos los detalles cerrados, aunque pasen semanas", "Comunicar cuanto antes, explicar el motivo real, reconocer el esfuerzo y comprometerse a dar fecha en plazo concreto", "Comunicarlo solo a managers para que gestionen con su equipo como consideren"],
+    ans: 2,
+    ok: "Exacto. Despues de tres retrasos, la confianza es fragil. Comunicar rapido con motivo real y reconociendo el esfuerzo es lo que diferencia este ano. Una fecha provisional falsa puede destruir lo poco que queda.",
+    ko: "La trampa es A: parece proactivo pero dar fecha sin confirmar tras tres retrasos destroza la confianza. Esperar (B) repite el error del ano pasado. Honestidad inmediata, aunque incomoda."
+  },
+  {
+    cat: "Criterio editorial", catCls: "criterio", type: "Situacion real",
+    text: "Un negocio quiere publicar en NaturgyNews su record de conexiones del ano. El texto es muy bueno pero incluye comparativas con Nedgia y UFD que las dejan en mal lugar, aunque los datos son correctos.",
+    ctx: "El responsable de uno de los negocios afectados ya te ha llamado para quejarse antes de que publiques.",
+    opts: ["Publicarlo tal cual: el reconocimiento es justo y los datos son correctos", "Bloquearlo: nada que mencione otros negocios negativamente puede publicarse en NaturgyNews", "Ayudarles a reformular para celebrar el logro sin las comparativas, preservando su orgullo", "Publicarlo en un canal mas pequeno para que genere menos ruido"],
+    ans: 2,
+    ok: "Correcto. Tu rol no es de guardabarreras sino de facilitador. Ayudarles a contar su historia bien en NaturgyNews sin herir a otros es lo que hace grande a comunicacion interna.",
+    ko: "A ignora el impacto en la cultura. B censura sin propuesta alternativa. D esconde el problema. Solo editar con generosidad y criterio cuida a todos."
+  },
+  {
+    cat: "Una sola voz", catCls: "voz", type: "Pregunta de criterio",
+    text: "Cual es el mayor riesgo de que Nedgia, UFD y Renovables comuniquen de forma autonoma y sin coordinacion hacia los empleados, cada una con su propio tono y canales?",
+    ctx: "",
+    opts: ["Que se publiquen demasiados contenidos y NaturgyNews se sature", "Que los empleados reciban mensajes contradictorios y dejen de saber que es informacion oficial de Naturgy", "Que el equipo de comunicacion pierda relevancia interna", "Que los managers de linea ganen demasiado protagonismo comunicativo"],
+    ans: 1,
+    ok: "Exacto. La fragmentacion de voces no es un problema estetico: es de confianza organizacional. Cuando Nedgia, UFD y Renovables dicen cosas distintas, la gente deja de saber que es oficial.",
+    ko: "C y D son problemas secundarios. El riesgo central es que la gente pierda la referencia de que es oficial. Sin confianza en la fuente, ningun mensaje funciona."
+  },
+  {
+    cat: "Con carino", catCls: "carino", type: "Situacion real",
+    text: "Un empleado de Nedgia escribe al buzon de NaturgyNews: 'Llevamos dos anos sin ver reflejado nada de lo que hacemos en el terreno. Aparecen Renovables y UFD, pero nosotros como si no existieramos.'",
+    ctx: "No es el primero de este tipo. Los equipos de operaciones de Nedgia son mas del 40% de la plantilla total.",
+    opts: ["No responder: hay mensajes mas urgentes y este no es accionable de inmediato", "Responder con un generico 'gracias por tu feedback, lo tendremos en cuenta'", "Responder de forma personal, agradecer la honestidad y pedir una llamada para entender mejor su realidad", "Derivarlo al equipo de Personas para que lo gestionen como queja formal"],
+    ans: 2,
+    ok: "Perfecto. Una queja directa y honesta es un regalo. Alguien que escribe merece respuesta real. Y si es el segundo mensaje de este tipo, hay un punto ciego importante en NaturgyNews que vale investigar.",
+    ko: "B parece educado pero confirma que nadie lee de verdad. Ignorarlo o derivarlo son variantes del mismo problema. Solo la respuesta personal y curiosa esta a la altura."
+  },
+  {
+    cat: "Criterio editorial", catCls: "criterio", type: "Dilema final",
+    text: "Tienes en cola para NaturgyNews: (1) comunicado urgente de seguridad en una central de ciclo combinado, (2) record historico de produccion en Renovables, (3) cambio en politica de gastos de viaje, (4) convocatoria del torneo de padel del offsite. Cual sale primero?",
+    ctx: "",
+    opts: ["El record de Renovables: es la mejor noticia del ano y necesita maxima visibilidad", "El comunicado de seguridad de la central: siempre primero, sin excepcion", "El cambio en politica de gastos: afecta a mas personas en su dia a dia", "El torneo de padel: la gente necesita algo positivo en un momento de mucha carga"],
+    ans: 1,
+    ok: "Claro que si. La seguridad de las personas es siempre la prioridad absoluta en NaturgyNews. Todo lo demas puede esperar. Este no es un dilema editorial: es un principio no negociable.",
+    ko: "C parece razonable y A parece estrategico, pero el criterio editorial tiene una jerarquia clara. La seguridad en la central siempre encabeza la lista. No hay buenas noticias que la desplacen."
+  }
+];
+
+var CATS = {
+  criterio: { bg: "#E8EEF8", color: "#003087" },
+  voz:      { bg: "#FFF0E6", color: "#CC5200" },
+  carino:   { bg: "#E8F5E9", color: "#1B5E20" }
+};
+var PCOLS = { criterio: "#003087", voz: "#FF6600", carino: "#2E7D32" };
+var cur = 0, score = 0, answered = false, questions = [];
+var pR = { criterio: [0,0], voz: [0,0], carino: [0,0] };
+
+function shuffle(a) {
+  var b = a.slice();
+  for (var i = b.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = b[i]; b[i] = b[j]; b[j] = t;
+  }
+  return b;
+}
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function startGame() {
+  questions = shuffle(QS);
+  cur = 0; score = 0; answered = false;
+  pR = { criterio: [0,0], voz: [0,0], carino: [0,0] };
+  show("s-game");
+  renderQ();
+}
+
+function renderQ() {
+  answered = false;
+  var q = questions[cur], n = questions.length;
+  document.getElementById("qLabel").textContent = "Pregunta " + (cur + 1) + " de " + n;
+  document.getElementById("qPct").textContent = Math.round(cur / n * 100) + "%";
+  document.getElementById("progFill").style.width = (cur / n * 100) + "%";
+  document.getElementById("scoreLive").textContent = score;
+
+  var c = CATS[q.catCls];
+  document.getElementById("catTag").innerHTML = '<span class="cat-tag" style="background:' + c.bg + ';color:' + c.color + '">' + q.cat + '</span>';
+  document.getElementById("qType").textContent = q.type;
+  document.getElementById("qText").textContent = q.text;
+
+  var ctxEl = document.getElementById("qCtx");
+  if (q.ctx) {
+    document.getElementById("qCtxText").textContent = q.ctx;
+    ctxEl.style.display = "block";
+  } else {
+    ctxEl.style.display = "none";
+  }
+
+  var letters = ["A", "B", "C", "D"];
+  var html = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    html += '<button class="opt" data-i="' + i + '"><span class="opt-letter">' + letters[i] + '</span><span class="opt-text">' + q.opts[i] + '</span></button>';
+  }
+  document.getElementById("optsGrid").innerHTML = html;
+
+  document.querySelectorAll(".opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      pickAnswer(parseInt(this.getAttribute("data-i")));
+    });
+  });
+
+  var fb = document.getElementById("feedback");
+  fb.className = "feedback";
+  document.getElementById("btnNext").className = "btn-next";
+}
+
+function pickAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  var q = questions[cur];
+  pR[q.catCls][1]++;
+
+  document.querySelectorAll(".opt").forEach(function(btn) {
+    btn.disabled = true;
+    var i = parseInt(btn.getAttribute("data-i"));
+    if (i === q.ans) btn.classList.add("reveal");
+  });
+
+  var selected = document.querySelector(".opt[data-i='" + idx + "']");
+  var correct = idx === q.ans;
+  if (correct) { score++; pR[q.catCls][0]++; selected.classList.remove("reveal"); selected.classList.add("correct"); }
+  else { selected.classList.add("wrong"); }
+
+  document.getElementById("scoreLive").textContent = score;
+
+  var fb = document.getElementById("feedback");
+  fb.className = "feedback show " + (correct ? "ok" : "ko");
+  document.getElementById("fbTitle").textContent = correct ? "Correcto" : "No del todo";
+  document.getElementById("fbText").textContent = correct ? q.ok : q.ko;
+
+  var nb = document.getElementById("btnNext");
+  nb.className = "btn-next show";
+  nb.textContent = (cur + 1 < questions.length) ? "Siguiente \u2192" : "Ver resultados \u2192";
+}
+
+function nextQ() {
+  cur++;
+  if (cur >= questions.length) { showResults(); return; }
+  renderQ();
+}
+
+function showResults() {
+  show("s-results");
+  var n = questions.length;
+  document.getElementById("finalScore").textContent = score;
+  document.getElementById("finalOf").textContent = "de " + n;
+
+  var r = score / n, title, msg;
+  if (r >= 0.9) { title = "Criterio de primera division"; msg = "Tienes claridad, empatia y comprension profunda de lo que significa comunicar bien en Naturgy. Exactamente lo que necesita NaturgyNews."; }
+  else if (r >= 0.7) { title = "Buen instinto, afinando el criterio"; msg = "Bases muy solidas. En los casos ambiguos, la duda es buena senal: significa que ves la complejidad. Con practica, el criterio se vuelve instinto."; }
+  else if (r >= 0.5) { title = "En el camino correcto"; msg = "Hay situaciones donde el instinto lleva a respuestas que parecen razonables pero esconden trampas. Eso es exactamente lo mas dificil de la comunicacion interna."; }
+  else { title = "Aqui empieza la conversacion interesante"; msg = "Cada respuesta incorrecta oculta un dilema real que vale debatir en equipo. Para eso es este juego: para que la conversacion de despues sea la mas valiosa del offsite."; }
+
+  document.getElementById("resTitle").textContent = title;
+  document.getElementById("resMsg").textContent = msg;
+
+  var cats = [
+    { k: "criterio", n: "Criterio editorial" },
+    { k: "voz",      n: "Una sola voz" },
+    { k: "carino",   n: "Con carino" }
+  ];
+  var html = "";
+  cats.forEach(function(c) {
+    var got = pR[c.k][0], tot = pR[c.k][1], w = tot > 0 ? Math.round(got / tot * 100) : 0;
+    html += '<div class="ps-card"><div class="ps-name">' + c.n + '</div><div class="ps-score">' + got + '<span class="ps-sub">/' + tot + '</span></div><div class="ps-track"><div class="ps-fill" style="width:' + w + '%;background:' + PCOLS[c.k] + '"></div></div></div>';
+  });
+  document.getElementById("pillarsGrid").innerHTML = html;
+}
+
+document.getElementById("btnStart").addEventListener("click", startGame);
+document.getElementById("btnNext").addEventListener("click", nextQ);
+document.getElementById("btnReplay").addEventListener("click", startGame);
+document.getElementById("btnIntro").addEventListener("click", function() { show("s-intro"); });
+</script>
+</body>
+</html>
